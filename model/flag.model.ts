@@ -5,7 +5,8 @@ import { Flags } from '../interface/model.interface';
 const FlagsSchema = new mongoose.Schema<Flags>({
     idChall: {
         type: String,
-        required: true
+        required: true,
+        unique: true,
     },
 
     nameAuthor: {
@@ -37,6 +38,9 @@ const FlagsSchema = new mongoose.Schema<Flags>({
         required: true,
         default: false
     },
+    url: {
+        type: String,
+    }
 
 }, { timestamps: true });
 

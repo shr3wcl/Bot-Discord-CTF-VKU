@@ -8,7 +8,8 @@ export interface Flags extends mongoose.Document {
     level?: String,
     description?: String,
     flag?: String,
-    mode?: Boolean
+    mode?: Boolean,
+    url?: String | null
 }
 
 export interface Players extends mongoose.Document {

@@ -1,5 +1,5 @@
 import { CacheType, Client, GuildMember, Interaction } from "discord.js"
-import { checkFlag, getAllChallenge, saveFlag } from "../controller/flag.controller";
+import { checkFlag, deleteChallenge, getAllChallenge, saveFlag, updateURLChall } from "../controller/flag.controller";
 import { getInfoHacker } from "../controller/player.controller";
 
 const adminPassword = process.env.ADMIN_PASSWORD;
@@ -19,7 +19,7 @@ const CTFCommand = {
                 case "flag":
                     await checkFlag(options.getString("flag"), user, interaction);
                     break;
-                case "chall":
+                case "challenge":
                     const password = options.getString("password");
                     if (password == adminPassword) {
                         await saveFlag(options.getString("id"),
@@ -30,6 +30,7 @@ const CTFCommand = {
                             options.getString("description"),
                             options.getString("flag"),
                             options.getBoolean("public"),
+                            options.getString("url"),
                             interaction
                         );
                     } else {
@@ -42,6 +43,16 @@ const CTFCommand = {
                     break;
                 case "listchall":
                     await getAllChallenge(options.getString("password") == adminPassword, interaction);
+                    break;
+                case "rmchall":
+                    await deleteChallenge(options.getString("password") == adminPassword,
+                        options.getString("id"), interaction);
+                    break;
+                case "updatechall":
+                    await updateURLChall(options.getString("password") == adminPassword,
+                        options.getString("id"), options.getString("url"), interaction);
+                    break;
+                case "update":
                     break;
             }
         })

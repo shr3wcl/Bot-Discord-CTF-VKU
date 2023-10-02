@@ -14,10 +14,11 @@ export const saveFlag = async (
     description: String | null,
     flag: String | null,
     mode: Boolean | null,
+    url: String | null,
     interaction: ChatInputCommandInteraction<CacheType>) =>
 {
     try {
-        const newFlag = new FlagModel({ idChall, nameAuthor, nameChall, point, level, description, flag, mode });
+        const newFlag = new FlagModel({ idChall, nameAuthor, nameChall, point, level, description, flag, mode, url });
         await newFlag.save();
         await interaction.reply("Thêm thành công!");
     } catch (error) {
@@ -27,7 +28,7 @@ export const saveFlag = async (
 
 
 export const checkFlag = async (flag: String | null, players: User, interaction: ChatInputCommandInteraction<CacheType>) => {
-    const checkFlag = await FlagModel.findOne({ flag: flag });
+    const checkFlag = await FlagModel.findOne({ flag: flag, mode: true });
     if (checkFlag) {
         const checkSubmit = await scoreModel.findOne({ idUser: players.id, flag: flag });
 
@@ -55,9 +56,9 @@ export const checkFlag = async (flag: String | null, players: User, interaction:
 export const getAllChallenge = async (admin: Boolean, interaction: ChatInputCommandInteraction<CacheType>) => {
     let challenges;
     if (admin) {
-        challenges = await FlagModel.find({}, "idChall nameAuthor nameChall point level description mode");
+        challenges = await FlagModel.find({}, "idChall nameAuthor nameChall point level description mode url");
     } else {
-        challenges = await FlagModel.find({ mode: true }, "idChall nameAuthor nameChall point level description");
+        challenges = await FlagModel.find({ mode: true }, "idChall nameAuthor nameChall point level description mode url");
     }
     let infoChallenges = "";
     challenges.map((challenge: Flags) => {
@@ -66,8 +67,39 @@ export const getAllChallenge = async (admin: Boolean, interaction: ChatInputComm
             "\n\tMô tả: " + challenge.description +
             "\n\tĐiểm: " + challenge.point +
             "\n\tĐộ khó: " + challenge.level +
-            "\n\tTrạng thái: " + challenge.mode + "\n";
+            "\n\tTrạng thái: " + (challenge.mode ? "Public" : "Private") +
+            "\n\tLink thử thách: " + challenge.url + "\n";
+        if (admin) {
+            infoChallenges += "\tID Challenge: " + challenge.idChall + "\n";
+        }
     });
     const embed = createEmbed("Danh sách thử thách", infoChallenges);
     await interaction.reply({ embeds: [embed] });
+}
+
+
+export const deleteChallenge = async (admin: Boolean, idChallenge: String | null, interaction: ChatInputCommandInteraction<CacheType>) => {
+    if (admin) {
+        await FlagModel.findOneAndDelete({ idChall: idChallenge });
+        await interaction.reply("Admin đã xóa thử thách có id là " + idChallenge);
+    } else {
+        await interaction.reply("Bạn không phải là admin để thực hiện chức năng này!");
+    }
+}
+
+export const updateURLChall = async (admin: Boolean, idChallenge: String | null, url: String | null, interaction: ChatInputCommandInteraction<CacheType>) => {
+    if (admin) {
+        const challenge = await FlagModel.findOne({ idChall: idChallenge });
+
+        if (challenge) {
+            challenge.url = url;
+            await challenge.save();
+            await interaction.reply("Admin đã cập nhập thử thách có id: " + idChallenge);
+        }
+        else {
+            await interaction.reply("Không tìm thấy thử thách có id: " + idChallenge + " để cập nhập");
+        }
+    } else {
+        await interaction.reply("Bạn không phải là admin để thực hiện chức năng này!");
+    }
 }
