@@ -62,15 +62,15 @@ export const getAllChallenge = async (admin: Boolean, interaction: ChatInputComm
     }
     let infoChallenges = "";
     challenges.map((challenge: Flags) => {
-        infoChallenges += challenge.idChall + ". Tên thử thách: " + challenge.nameChall +
-            "\n\tTác giả: " + challenge.nameAuthor +
-            "\n\tMô tả: " + challenge.description +
-            "\n\tĐiểm: " + challenge.point +
-            "\n\tĐộ khó: " + challenge.level +
-            "\n\tTrạng thái: " + (challenge.mode ? "Public" : "Private") +
-            "\n\tLink thử thách: " + challenge.url + "\n";
+        infoChallenges += challenge.idChall + ". ***Tên thử thách:*** " + challenge.nameChall +
+            "***\n\tTác giả:*** " + challenge.nameAuthor +
+            "***\n\tMô tả:*** " + challenge.description +
+            "***\n\tĐiểm:*** " + challenge.point +
+            "***\n\tĐộ khó:*** " + challenge.level +
+            "***\n\tTrạng thái:*** " + (challenge.mode ? "Public" : "Private") +
+            "***\n\tLink thử thách:*** " + challenge.url + "\n";
         if (admin) {
-            infoChallenges += "\tID Challenge: " + challenge.idChall + "\n";
+            infoChallenges += "***\tID Challenge:*** " + challenge.idChall + "\n";
         }
     });
     const embed = createEmbed("Danh sách thử thách", infoChallenges);
