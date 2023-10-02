@@ -13,6 +13,8 @@ const serverCommands: Array<RESTPostAPIChatInputApplicationCommandsJSONBody> = [
     new SlashCommandBuilder().setName("ping").setDescription("Check bot!"),
     new SlashCommandBuilder().setName("flag").setDescription("Check flag!")
         .addStringOption(option => option.setName('flag').setDescription("Check your flag").setRequired(true)),
+    new SlashCommandBuilder().setName("listchall").setDescription("View all challenge (Normal or admin)")
+        .addStringOption(option => option.setName("password").setDescription("Type password to verify")),
     new SlashCommandBuilder().setName("chall").setDescription("Add new flag!")
         .addStringOption(option => option.setName('id').setDescription("Add new flag!").setRequired(true))
         .addStringOption(option => option.setName('author').setDescription("Add new flag!").setRequired(true))
@@ -23,6 +25,7 @@ const serverCommands: Array<RESTPostAPIChatInputApplicationCommandsJSONBody> = [
         .addBooleanOption(option => option.setName('public').setDescription("Add new flag!").setRequired(true))
         .addNumberOption(option => option.setName('point').setDescription("Add new flag!").setRequired(true))
         .addStringOption(option => option.setName('password').setDescription("Admin password").setRequired(true)),
+    
 ].map(command => command.toJSON());
 
 const UserCommands: Array<RESTPostAPIChatInputApplicationCommandsJSONBody> = [

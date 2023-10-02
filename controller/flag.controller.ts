@@ -3,6 +3,7 @@ import { Flags } from "../interface/model.interface";
 import FlagModel from "../model/flag.model";
 import scoreModel from "../model/score.model";
 import playerModel from "../model/player.model";
+import { createEmbed } from "../feature/component";
 
 export const saveFlag = async (
     idChall: String | null,
@@ -23,6 +24,7 @@ export const saveFlag = async (
         await interaction.reply("Không thể thêm flag vào lúc này!");
     }
 }
+
 
 export const checkFlag = async (flag: String | null, players: User, interaction: ChatInputCommandInteraction<CacheType>) => {
     const checkFlag = await FlagModel.findOne({ flag: flag });
@@ -47,4 +49,25 @@ export const checkFlag = async (flag: String | null, players: User, interaction:
     } else {
         await interaction.reply("Flag chưa chính xác, hãy thử lại!");
     }
+}
+
+
+export const getAllChallenge = async (admin: Boolean, interaction: ChatInputCommandInteraction<CacheType>) => {
+    let challenges;
+    if (admin) {
+        challenges = await FlagModel.find({}, "idChall nameAuthor nameChall point level description mode");
+    } else {
+        challenges = await FlagModel.find({ mode: true }, "idChall nameAuthor nameChall point level description");
+    }
+    let infoChallenges = "";
+    challenges.map((challenge: Flags) => {
+        infoChallenges += challenge.idChall + ". Tên thử thách: " + challenge.nameChall +
+            "\n\tTác giả: " + challenge.nameAuthor +
+            "\n\tMô tả: " + challenge.description +
+            "\n\tĐiểm: " + challenge.point +
+            "\n\tĐộ khó: " + challenge.level +
+            "\n\tTrạng thái: " + challenge.mode + "\n";
+    });
+    const embed = createEmbed("Danh sách thử thách", infoChallenges);
+    await interaction.reply({ embeds: [embed] });
 }

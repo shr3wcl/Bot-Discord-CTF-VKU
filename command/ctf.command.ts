@@ -1,5 +1,5 @@
 import { CacheType, Client, GuildMember, Interaction } from "discord.js"
-import { checkFlag, saveFlag } from "../controller/flag.controller";
+import { checkFlag, getAllChallenge, saveFlag } from "../controller/flag.controller";
 import { getInfoHacker } from "../controller/player.controller";
 
 const adminPassword = process.env.ADMIN_PASSWORD;
@@ -40,9 +40,12 @@ const CTFCommand = {
                     const hacker = options.getUser("hacker");
                     await getInfoHacker(hacker ?? user, interaction);
                     break;
+                case "listchall":
+                    await getAllChallenge(options.getString("password") == adminPassword, interaction);
+                    break;
             }
         })
-    }
+    } 
 }
 
 export default CTFCommand;
