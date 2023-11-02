@@ -15,10 +15,11 @@ export const saveFlag = async (
     flag: String | null,
     mode: Boolean | null,
     url: String | null,
+    category: String | null,
     interaction: ChatInputCommandInteraction<CacheType>) =>
 {
     try {
-        const newFlag = new FlagModel({ idChall, nameAuthor, nameChall, point, level, description, flag, mode, url });
+        const newFlag = new FlagModel({ idChall, nameAuthor, nameChall, point, level, description, flag, mode, url, category });
         await newFlag.save();
         await interaction.reply("Thêm thành công!");
     } catch (error) {
@@ -39,7 +40,7 @@ export const checkFlag = async (flag: String | null, players: User, interaction:
                 checkUser.numberFlags = (checkUser.numberFlags?.valueOf() || 0) + 1;
                 await checkUser.save();
             } else {
-                const newUser = new playerModel({ idUser: players.id, nameUser: players.globalName, level: "Newbie", point: checkFlag.point, numberFlags: 1 });
+                const newUser = new playerModel({ idUser: players.id, nameUser: players.globalName, level: "💻 Newbie", point: checkFlag.point, numberFlags: 1 });
                 await newUser.save();
             }
             await new scoreModel({ idChall: checkFlag.idChall, idUser: players.id, flag: flag }).save();
@@ -53,17 +54,27 @@ export const checkFlag = async (flag: String | null, players: User, interaction:
 }
 
 
-export const getAllChallenge = async (admin: Boolean, interaction: ChatInputCommandInteraction<CacheType>) => {
+export const getAllChallenge = async (admin: Boolean, category: String | null, interaction: ChatInputCommandInteraction<CacheType>) => {
     let challenges;
-    if (admin) {
-        challenges = await FlagModel.find({}, "idChall nameAuthor nameChall point level description mode url");
+    if (!category) {
+        
+        if (admin) {
+            challenges = await FlagModel.find({}, "idChall nameAuthor nameChall point level description mode url category");
+        } else {
+            challenges = await FlagModel.find({ mode: true }, "idChall nameAuthor nameChall point level description mode url category");
+        }
     } else {
-        challenges = await FlagModel.find({ mode: true }, "idChall nameAuthor nameChall point level description mode url");
+        if (admin) {
+            challenges = await FlagModel.find({category: category}, "idChall nameAuthor nameChall point level description mode url category");
+        } else {
+            challenges = await FlagModel.find({ mode: true, category: category }, "idChall nameAuthor nameChall point level description mode url category");
+        }
     }
     let infoChallenges = "";
     challenges.map((challenge: Flags) => {
         infoChallenges += challenge.idChall + ". ***Tên thử thách:*** " + challenge.nameChall +
             "***\n\tTác giả:*** " + challenge.nameAuthor +
+            "***\n\tLoại:*** " + challenge.category +
             "***\n\tMô tả:*** " + challenge.description +
             "***\n\tĐiểm:*** " + challenge.point +
             "***\n\tĐộ khó:*** " + challenge.level +
@@ -73,7 +84,7 @@ export const getAllChallenge = async (admin: Boolean, interaction: ChatInputComm
             infoChallenges += "***\tID Challenge:*** " + challenge.idChall + "\n";
         }
     });
-    const embed = createEmbed("Danh sách thử thách", infoChallenges);
+    const embed = createEmbed("Danh sách thử thách" + (category ? ` thuộc loại ${category}` : ""), infoChallenges);
     await interaction.reply({ embeds: [embed] });
 }
 
@@ -87,12 +98,13 @@ export const deleteChallenge = async (admin: Boolean, idChallenge: String | null
     }
 }
 
-export const updateURLChall = async (admin: Boolean, idChallenge: String | null, url: String | null, interaction: ChatInputCommandInteraction<CacheType>) => {
+export const updateURLChall = async (admin: Boolean, idChallenge: String | null, url: String | null, status: Boolean | null, interaction: ChatInputCommandInteraction<CacheType>) => {
     if (admin) {
         const challenge = await FlagModel.findOne({ idChall: idChallenge });
 
         if (challenge) {
             challenge.url = url;
+            challenge.mode = status ? true : false;
             await challenge.save();
             await interaction.reply("Admin đã cập nhập thử thách có id: " + idChallenge);
         }

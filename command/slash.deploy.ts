@@ -14,6 +14,7 @@ const serverCommands: Array<RESTPostAPIChatInputApplicationCommandsJSONBody> = [
     new SlashCommandBuilder().setName("flag").setDescription("Check flag!")
         .addStringOption(option => option.setName('flag').setDescription("Check your flag").setRequired(true)),
     new SlashCommandBuilder().setName("listchall").setDescription("View all challenge (Normal or admin)")
+        .addStringOption(option => option.setName("category").setDescription("Type category"))
         .addStringOption(option => option.setName("password").setDescription("Type password to verify")),
     new SlashCommandBuilder().setName("challenge").setDescription("Add new flag!")
         .addStringOption(option => option.setName('id').setDescription("Add new flag!").setRequired(true))
@@ -24,6 +25,8 @@ const serverCommands: Array<RESTPostAPIChatInputApplicationCommandsJSONBody> = [
         .addStringOption(option => option.setName('flag').setDescription("Add new flag!").setRequired(true))
         .addBooleanOption(option => option.setName('public').setDescription("Add new flag!").setRequired(true))
         .addNumberOption(option => option.setName('point').setDescription("Add new flag!").setRequired(true))
+        .addStringOption(option => option.setName('category').setDescription("Add category").setRequired(true))
+        .addStringOption(option => option.setName('url').setDescription("Add category").setRequired(true))
         .addStringOption(option => option.setName('password').setDescription("Admin password").setRequired(true)),
     new SlashCommandBuilder().setName("rmchall").setDescription("Admin delete challenge")
         .addStringOption(option => option.setName("id").setDescription("Id challenge").setRequired(true))
@@ -31,6 +34,7 @@ const serverCommands: Array<RESTPostAPIChatInputApplicationCommandsJSONBody> = [
     new SlashCommandBuilder().setName("updatechall").setDescription("Admin update challenge")
         .addStringOption(option => option.setName("id").setDescription("ID challenge").setRequired(true))
         .addStringOption(option => option.setName("url").setDescription("Url challenge").setRequired(true))
+        .addBooleanOption(option => option.setName("status").setDescription("Status challenge").setRequired(true))
         .addStringOption(option => option.setName("password").setDescription("Admin password").setRequired(true))
     
 ].map(command => command.toJSON());
@@ -38,7 +42,8 @@ const serverCommands: Array<RESTPostAPIChatInputApplicationCommandsJSONBody> = [
 const UserCommands: Array<RESTPostAPIChatInputApplicationCommandsJSONBody> = [
     new SlashCommandBuilder().setName("infohacker").setDescription("Check hacker information!")
         .addUserOption(option => option.setName("hacker").setDescription("Select hacker to view")),
-    new SlashCommandBuilder().setName("update").setDescription("Admin update system!"),
+    new SlashCommandBuilder().setName("update").setDescription("Admin update system!")
+        .addStringOption(option => option.setName("password").setDescription("Admin password").setRequired(true)),
 ].map(command => command.toJSON());
 
 export const registerSlashCommand = (guildId: string) => {
