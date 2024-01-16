@@ -26,7 +26,12 @@ const PlayerSchema = new mongoose.Schema<Players>({
     numberFlags: {
         type: Number,
         default: 0
-    }
+    },
+
+    idTeam: {
+        type: String,
+        default: null
+    },
 
 }, { timestamps: true });
 

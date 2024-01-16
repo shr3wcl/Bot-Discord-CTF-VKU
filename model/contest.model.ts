@@ -1,50 +1,40 @@
 import * as mongoose from 'mongoose';
-import { Flags } from '../interface/model.interface';
+import { Contest, Team, SubmitContest, TeamContest } from '../interface/model.interface';
 
-
-const FlagsSchema = new mongoose.Schema<Flags>({
-    idChall: {
+const ContestSchema = new mongoose.Schema<Contest>({
+    idContest: {
         type: String,
         required: true,
-        unique: true,
+        unique: true
     },
-
-    nameAuthor: {
+    nameContest: {
         type: String,
-        required: true,
-    },
-
-    nameChall: {
-        type: String,
-        required: true,
-    },
-    point: {
-        type: Number,
-        required: true,
-    },
-    level: {
-        type: String,
-        required: true,
+        default: null
     },
     description: {
         type: String,
+        default: null
     },
-    flag: {
-        type: String,
-        required: true,
-    },
-    mode: {
+    status: {
         type: Boolean,
-        required: true,
         default: false
     },
-    url: {
+    startTime: {
         type: String,
+        default: null
     },
-    category: {
+    endTime: {
         type: String,
+        default: null
+    },
+    teams: {
+        type: Array<TeamContest>(),
+        default: [],
+    },
+    submit: {
+        type: Array<SubmitContest>(),
+        default: [],
     }
-
 }, { timestamps: true });
 
-export default mongoose.model<Flags>("Flag", FlagsSchema);
+export default mongoose.model<Contest>("Contest", ContestSchema);
