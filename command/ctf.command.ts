@@ -1,7 +1,7 @@
 import { CacheType, Client, GuildMember, Interaction } from "discord.js"
 import { checkFlag, deleteChallenge, getAllChallenge, saveFlag, scoreBoard, updateURLChall } from "../controller/flag.controller";
 import { createTeam, getInfoHacker, leaveTeam, listParticipatedContest, updateLevelAllUser } from "../controller/player.controller";
-import { addChallengeContest, createContest, joinContest, listContests, scoreBoardContest } from "../controller/contest.controller";
+import { addChallengeContest, createContest, joinContest, leaveContest, listContests, scoreBoardContest } from "../controller/contest.controller";
 import { joinTeam } from "../controller/player.controller";
 import { createEmbed } from "../feature/component";
 
@@ -36,9 +36,6 @@ const CTFCommand = {
                             options.getBoolean("public"),
                             options.getString("url"),
                             options.getString("category"),
-                            options.getString("status"),
-                            options.getBoolean("public"),
-                            options.getString("passwordcontest"),
                             interaction
                         );
                         if (options.getString("idContest")) {
@@ -71,16 +68,30 @@ const CTFCommand = {
                     break;
                 case "createcontest":
                     const idContest = Math.random().toString(36).substring(2, 10);
-                    await createContest(idContest, options.getString("name"), options.getString("description"), options.getBoolean("status"), options.getString("start"), options.getString("endt"), interaction);
+                    await createContest(idContest,
+                        options.getString("name"),
+                        options.getString("description"),
+                        options.getString("status"),
+                        options.getString("start"),
+                        options.getString("endt"),
+                        options.getBoolean("public"),
+                        options.getString("passwordcontest"),
+                        options.getString("url"),
+                        interaction);
                     break;
                 case "leavecontest":
-                    await leaveTeam(user, interaction);
+                    await leaveContest(options.getString("id"), user, options.getString("idteam"), interaction);
                     break;
                 case "listcontest":
                     await listContests(interaction);
                     break;
                 case "joincontest":
-                    await joinContest(options.getString("id"), user, options.getString("password"), interaction);
+                    await joinContest(options.getString("id"),
+                        user,
+                        options.getString("idteam"),
+                        options.getString("password"),
+                        interaction
+                    );
                     break;
                 case "scoreboardcontest":
                     await scoreBoardContest(options.getString("id"), interaction);
@@ -97,7 +108,7 @@ const CTFCommand = {
                     }
                     break;
                 case "leaveteam":
-                    await leaveTeam(user, interaction);
+                    await leaveTeam(user, options.getString("idteam"), interaction);
                     break;
                 case "contest":
                     await listParticipatedContest(user, interaction);

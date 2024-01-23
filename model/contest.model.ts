@@ -16,7 +16,7 @@ const ContestSchema = new mongoose.Schema<Contest>({
         default: null
     },
     status: {
-        type: Boolean,
+        type: String,
         default: false
     },
     startTime: {
@@ -36,9 +36,7 @@ const ContestSchema = new mongoose.Schema<Contest>({
         default: [],
     },
     createdBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true
+        type: String,
     },
     password: {
         type: String,
@@ -47,6 +45,14 @@ const ContestSchema = new mongoose.Schema<Contest>({
     public: {
         type: Boolean,
         default: false
+    },
+    idChannel: {
+        type: String,
+        default: null
+    },
+    url: {
+        type: String,
+        default: null
     },
 }, { timestamps: true });
 

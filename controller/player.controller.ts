@@ -77,11 +77,20 @@ export const joinTeam = async (hacker: User, idTeam: String | null, interaction:
         await interaction.reply("Người dùng này chưa có trong hệ thống! Submit ít nhất một Flag để được thêm vào hệ thống");
     } else {
         const team = await teamModel.findOne({ idTeam: idTeam });
-        if (team) {
-            user.idTeam = [];
-            if (team.idTeam) {
+
+        if (team?.members.find((member: any) => member.idUser === user.idUser)) {
+            return await interaction.reply("Bạn đã có trong team này!");
+        }
+        
+        if (team && team.idTeam) {
+            if(user.idTeam) {
                 user.idTeam.push(team.idTeam);
             }
+            else {
+                user.idTeam = [team.idTeam];
+            }
+            team.members.push(user);
+            await team.save();
             await user.save();
             await interaction.reply("Đã tham gia team thành công!");
         } else {
@@ -128,20 +137,26 @@ export const createTeam = async (hacker: User, nameTeam: String, description: St
     }
 }
 
-export const leaveTeam = async (hacker: User, interaction: ChatInputCommandInteraction<CacheType>) => {
+export const leaveTeam = async (hacker: User, idTeam: String | null, interaction: ChatInputCommandInteraction<CacheType>) => {
     const user = await playerModel.findOne({ idUser: hacker.id });
     if (user) {
-        if ((user.idTeam?.length ?? 0) > 0) {
-            const team = await teamModel.findOne({ idTeam: user.idTeam });
-            if (team) {
-                user.idTeam = [];
-                await user.save();
-                await interaction.reply("Đã rời team thành công!");
+        const checkTeam = await teamModel.findOne({ idTeam: idTeam });
+        if (checkTeam && user.idTeam) {
+            const index = checkTeam.members.findIndex((member: any) => member.idUser === user.idUser);
+            if (index !== -1) {
+                checkTeam.members.splice(index, 1);
+                await checkTeam.save();
+                const indexUser = user.idTeam.findIndex((team: any) => team === idTeam);
+                if (indexUser !== -1) {
+                    user.idTeam.splice(indexUser, 1);
+                    await user.save();
+                }
+                await interaction.reply("Rời team thành công!");
             } else {
-                await interaction.reply("Team không tồn tại!");
+                await interaction.reply("Bạn không có trong team này!");
             }
         } else {
-            await interaction.reply("Bạn chưa có team!");
+            await interaction.reply("Team không tồn tại!");
         }
     } else {
         await interaction.reply("Người dùng này chưa có trong hệ thống! Submit ít nhất một Flag để được thêm vào hệ thống");
@@ -156,7 +171,7 @@ export const listParticipatedContest = async (hacker: User, interaction: ChatInp
             const listContestName = listContest.map((contest: any) => {
                 return contest.name + " - " + contest.idTeam;
             });
-            const embed = createEmbed("Danh sách contest đã tham gia", listContestName.join("\n\t\t"));
+            const embed = createEmbed("Danh sách contest đã và đang tham gia", listContestName.join("\n\t\t"));
             await interaction.reply({ embeds: [embed] });
         } else {
             await interaction.reply("Bạn chưa tham gia contest nào!");

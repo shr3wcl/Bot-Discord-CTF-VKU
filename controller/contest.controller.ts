@@ -1,39 +1,51 @@
-import { CacheType, ChatInputCommandInteraction, Interaction, User } from "discord.js";
+import { CacheType, ChannelType, ChatInputCommandInteraction, Interaction, TextChannel, User } from "discord.js";
 import ContestModel from "../model/contest.model";
 import playerModel from "../model/player.model";
 import teamModel from "../model/team.model";
 import { createEmbed } from "../feature/component";
 import flagModel from "../model/flag.model";
 import { Flags } from "../interface/model.interface";
+import contestModel from "../model/contest.model";
 
 export const createContest = async (
     idContest: String | null,
     nameContest: String | null,
     description: String | null,
-    status: Boolean | null,
+    status: String | null,
     startTime: String | null,
     endTime: String | null,
+    publicMode: Boolean | null,
+    password: String | null,
+    url: String | null,
     interaction: ChatInputCommandInteraction<CacheType>
 ) => {
     try {
-        const newContest = new ContestModel({ idContest, nameContest, description, status, startTime, endTime });
-        await newContest.save();
-        await interaction.reply("Thêm thành công!");
+        const checkContest = await contestModel.findOne({ nameContest });
+        if (checkContest) {
+            return await interaction.reply("Tên contest này đã tồn tại!");
+        }
+        if (nameContest && interaction.guild) {
+            const channel = await interaction.guild.channels.create({
+                name: nameContest.toString(),
+                type: ChannelType.GuildText,
+                permissionOverwrites: [
+                    {
+                        id: interaction.guild.roles.everyone,
+                        deny: ["ViewChannel"]
+                    }
+                ],
+                parent: "1199280111493586994"
+            });
+            const newContest = new ContestModel({ idContest, nameContest, description, status, startTime, endTime, public: publicMode, password, createdBy: `${interaction.user.username}:${interaction.user.id}`, idChannel: channel.id });
+            await newContest.save();
+            await interaction.reply("Thêm thành công!");
+        } else {
+            await interaction.reply("Không thể thêm contest vào lúc này!");
+        }
     } catch (error) {
+        console.log(error);
+        
         await interaction.reply("Không thể thêm contest vào lúc này!");
-    }
-}
-
-export const getAllContest = async (interaction: ChatInputCommandInteraction<CacheType>) => {
-    try {
-        const contests = await ContestModel.find({});
-        let result = "";
-        contests.forEach(contest => {
-            result += `**ID:** ${contest.idContest}\n**Name:** ${contest.nameContest}\n**Description:** ${contest.description}\n**Status:** ${contest.status}\n**Start time:** ${contest.startTime}\n**End time:** ${contest.endTime}\n\n`;
-        });
-        await interaction.reply(result);
-    } catch (error) {
-        await interaction.reply("Không thể lấy danh sách contest vào lúc này!");
     }
 }
 
@@ -78,23 +90,29 @@ export const getInfoContest = async (idContest: String | null, interaction: Chat
     }
 }
 
-export const joinContest = async (idContest: String | null, user: User, password: String | null, interaction: ChatInputCommandInteraction<CacheType>) => {
+export const joinContest = async (idContest: String | null, user: User, idTeam: String | null, password: String | null, interaction: ChatInputCommandInteraction<CacheType>) => {
     try {
         const contest = await ContestModel.findOne({ idContest });
         if (contest) {
-            const idTeam = await playerModel.findOne({ idUser: user.id }).select("idTeam");
-            if (idTeam) {
-                const teamContest = await ContestModel.findOne({ "teams.team.idTeam": idTeam.idTeam });
-                const team = await teamModel.findOne({ idTeam: idTeam.idTeam });
+            const listIdTeam = await playerModel.findOne({ idUser: user.id }).select("idTeam");
+            if (listIdTeam) {
+                if (listIdTeam.idTeam && idTeam && !listIdTeam?.idTeam.includes(idTeam)) {
+                    return await interaction.reply("Bạn không tham gia team này!");
+                }
+                
+                const teamContest = await ContestModel.findOne({ "teams.team.idTeam": idTeam });
+                
                 if (teamContest) {
-                    await interaction.reply("Bạn đã tham gia contest này rồi!");
+                    return await interaction.reply("Team của bạn đã tham gia contest này rồi!");
                 } else {
+                    const team = await teamModel.findOne({ idTeam: listIdTeam.idTeam });
+
                     if ((contest.public == false) && (password !== contest.password)) {
                         return await interaction.reply("Mật khẩu của contest không đúng!");
                     }
                     const newTeam = {
                         team: {
-                            idTeam: idTeam,
+                            idTeam: team?.idTeam,
                             name: team?.name,
                             description: team?.description,
                             score: 0,
@@ -108,6 +126,25 @@ export const joinContest = async (idContest: String | null, user: User, password
                             teams: newTeam
                         }
                     });
+
+                    const channel = interaction.guild?.channels.cache.get(contest.idChannel.toString()) as TextChannel;
+                    
+                    if (channel) {
+                        if (team?.members) {
+                            team?.members.forEach(async (member) => {
+                                if (member.idUser) {
+                                    const user = await interaction.guild?.members.fetch(member.idUser.toString());
+                                    if (user) {
+                                        await channel.permissionOverwrites.create(user.id, {
+                                            ViewChannel: true, 
+                                            SendMessages: true,
+                                            ReadMessageHistory: true,
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    }
                     await interaction.reply("Tham gia contest thành công!");
                     
                 }
@@ -123,18 +160,40 @@ export const joinContest = async (idContest: String | null, user: User, password
     }
 }
 
-export const leaveContest = async (idContest: String | null, user: User, interaction: ChatInputCommandInteraction<CacheType>) => {
+export const leaveContest = async (idContest: String | null, user: User, idteam: String | null, interaction: ChatInputCommandInteraction<CacheType>) => {
     try {
         const contest = await ContestModel.findOne({ idContest });
         if (contest) {
-            const idTeam = await playerModel.findOne({ idUser: user.id }).select("idTeam");
-            if (idTeam) {
-                const teamContest = await ContestModel.findOne({ "teams.team.idTeam": idTeam.idTeam });
+            const listIdTeam = await playerModel.findOne({ idUser: user.id }).select("idTeam");
+            if (listIdTeam) {
+                if (listIdTeam.idTeam && idteam && !listIdTeam?.idTeam.includes(idteam)) {
+                    return await interaction.reply("Bạn không tham gia team này!");
+                }
+                const teamContest = await ContestModel.findOne({ "teams.team.idTeam": idteam });
                 if (teamContest) {
+                    const channel = interaction.guild?.channels.cache.get(contest.idChannel.toString()) as TextChannel;
+                    if (channel) {
+                        if (teamContest.teams[0].team.members) {
+                            teamContest.teams[0].team.members.forEach(async (member) => {
+                                if (member.idUser) {
+                                    const user = await interaction.guild?.members.fetch(member.idUser.toString());
+                                    if (user) {
+                                        await channel.permissionOverwrites.create(user.id, {
+                                            ViewChannel: false,
+                                            SendMessages: false,
+                                            ReadMessageHistory: false
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    }
                     await ContestModel.findOneAndUpdate({ idContest }, {
                         $pull: {
                             teams: {
-                                "team.idTeam": idTeam.idTeam
+                                team: {
+                                    idTeam: idteam
+                                }
                             }
                         }
                     });
@@ -143,7 +202,7 @@ export const leaveContest = async (idContest: String | null, user: User, interac
                     await interaction.reply("Bạn chưa tham gia contest này!");
                 }
             } else {
-                await interaction.reply("Bạn chưa gia nhập team!");
+                await interaction.reply("Bạn chưa tham gia team nào!");
             }
         } else {
             await interaction.reply("Không tìm thấy contest!");
@@ -199,7 +258,7 @@ export const listContests = async (interaction: ChatInputCommandInteraction<Cach
         const contests = await ContestModel.find({}).sort({ startTime: 1 });
         let result = "";
         contests.forEach((contest, index) => {
-            result += `${index + 1}. **ID:** ${contest.idContest}\n**Name:** ${contest.nameContest}\n**Description:** ${contest.description}\n**Status:** ${contest.status}\n**Start time:** ${contest.startTime}\n**End time:** ${contest.endTime}\n\n`;
+            result += `${index + 1}. **ID:** ${contest.idContest}\n**Name:** ${contest.nameContest}\n**Description:** ${contest.description}\n**Status:** ${contest.status}\n**Start time:** ${contest.startTime}\n**End time:** ${contest.endTime}\n**URL:** ${contest.url}\n\n`;
         });
         const embed = createEmbed("Danh sách contest", result, null, null, 0x0099FF);
         await interaction.reply({ embeds: [embed] });

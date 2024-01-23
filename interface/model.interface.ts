@@ -61,14 +61,16 @@ export interface Contest extends Document {
     idContest?: String,
     nameContest?: String,
     description?: String,
-    status?: Boolean,
+    status?: String,
     startTime?: String,
     endTime?: String,
     teams: TeamContest[],
     submit: SubmitContest[],
-    createdBy: mongoose.Schema.Types.ObjectId,
+    createdBy: String,
     password: String,
     public: Boolean,
+    idChannel: String
+    url: String,
 }
 
 export interface FlagContest extends mongoose.Document {

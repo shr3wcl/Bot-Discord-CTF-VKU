@@ -42,9 +42,9 @@ const serverCommands: Array<RESTPostAPIChatInputApplicationCommandsJSONBody> = [
             { name: 'Reverse Engineering', value: 'Reverse Engineering' } as APIApplicationCommandOptionChoice<string>,
             { name: 'Web Exploitation', value: 'Web Exploitation' } as APIApplicationCommandOptionChoice<string>,
         ).setRequired(true))
-        .addStringOption(option => option.setName('url').setDescription("Add category").setRequired(true))
-        .addStringOption(option => option.setName('idcontest').setDescription("Contest Challenge (No if not)").setRequired(true))
-        .addStringOption(option => option.setName('password').setDescription("Admin password").setRequired(true)),
+        .addStringOption(option => option.setName('password').setDescription("Admin password").setRequired(true))
+        .addStringOption(option => option.setName('url').setDescription("Add category"))
+        .addStringOption(option => option.setName('idcontest').setDescription("Contest Challenge (No if not)")),
     new SlashCommandBuilder().setName("rmchall").setDescription("Admin delete challenge")
         .addStringOption(option => option.setName("id").setDescription("Id challenge").setRequired(true))
         .addStringOption(option => option.setName("password").setDescription("Admin password").setRequired(true)),
@@ -65,7 +65,8 @@ const serverCommands: Array<RESTPostAPIChatInputApplicationCommandsJSONBody> = [
             { name: 'Ended', value: 'Ended' } as APIApplicationCommandOptionChoice<string>,
         ).setDescription("Contest status").setRequired(true))
         .addBooleanOption(option => option.setName("public").setDescription("Contest public").setRequired(true))
-        .addStringOption(option => option.setName("passwordcontest").setDescription("Contest password (Pass it if contest is public)").setRequired(true)),
+        .addStringOption(option => option.setName("passwordcontest").setDescription("Contest password (Pass it if contest is public)"))
+        .addStringOption(option => option.setName("url").setDescription("Contest url")),
     new SlashCommandBuilder().setName("listcontest").setDescription("View all contest (Normal or admin)")
         .addStringOption(option => option.setName("password").setDescription("Type password to verify")),
     new SlashCommandBuilder().setName("rmcontest").setDescription("Admin delete contest")
@@ -83,9 +84,11 @@ const serverCommands: Array<RESTPostAPIChatInputApplicationCommandsJSONBody> = [
         .addStringOption(option => option.setName("id").setDescription("Contest ID").setRequired(true)),
     new SlashCommandBuilder().setName("joincontest").setDescription("Join contest!")
         .addStringOption(option => option.setName("id").setDescription("Contest ID").setRequired(true))
-        .addStringOption(option => option.setName("password").setDescription("Contest password (Pass it if contest is public)").setRequired(true)),
+        .addStringOption(option => option.setName("idteam").setDescription("Team ID").setRequired(true))
+        .addStringOption(option => option.setName("password").setDescription("Contest password (Pass it if contest is public)")),
     new SlashCommandBuilder().setName("leavecontest").setDescription("Leave contest!")
-        .addStringOption(option => option.setName("id").setDescription("Contest ID").setRequired(true)),
+        .addStringOption(option => option.setName("id").setDescription("Contest ID").setRequired(true))
+        .addStringOption(option => option.setName("idteam").setDescription("Team ID").setRequired(true)),
     new SlashCommandBuilder().setName("help").setDescription("View help!"),
     new SlashCommandBuilder().setName("scoreboardcontest").setDescription("View scoreboard contest!")
         .addStringOption(option => option.setName("id").setDescription("Contest ID").setRequired(true)),
@@ -104,7 +107,8 @@ const UserCommands: Array<RESTPostAPIChatInputApplicationCommandsJSONBody> = [
     new SlashCommandBuilder().setName("createteam").setDescription("Create team!")
         .addStringOption(option => option.setName("name").setDescription("Team name").setRequired(true))
         .addStringOption(option => option.setName("description").setDescription("Team description").setRequired(true)),
-    new SlashCommandBuilder().setName("leaveteam").setDescription("Leave team!"),
+    new SlashCommandBuilder().setName("leaveteam").setDescription("Leave team!")
+        .addStringOption(option => option.setName("idteam").setDescription("Team ID").setRequired(true)),
     new SlashCommandBuilder().setName("contest").setDescription("View participating competitions!"),
     
 ].map(command => command.toJSON());

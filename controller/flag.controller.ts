@@ -17,13 +17,10 @@ export const saveFlag = async (
     mode: Boolean | null,
     url: String | null,
     category: String | null,
-    status: String | null,
-    publicMode: Boolean | null,
-    password: String | null,
     interaction: ChatInputCommandInteraction<CacheType>) =>
 {
     try {
-        const newFlag = new FlagModel({ idChall, nameAuthor, nameChall, point, level, description, flag, mode, url, category, status, public: publicMode, password, createdBy: interaction.user.id });
+        const newFlag = new FlagModel({ idChall, nameAuthor, nameChall, point, level, description, flag, mode, url, category });
         await newFlag.save();
         await interaction.reply("Thêm thành công!");
     } catch (error) {
