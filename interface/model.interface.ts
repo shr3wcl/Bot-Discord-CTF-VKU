@@ -21,7 +21,7 @@ export interface Players extends mongoose.Document {
     point: Number,
     level?: String,
     numberFlags: Number,
-    idTeam?: String,
+    idTeam?: String[],
 }
 
 export interface Score extends mongoose.Document {

@@ -29,8 +29,8 @@ const PlayerSchema = new mongoose.Schema<Players>({
     },
 
     idTeam: {
-        type: String,
-        default: null
+        type: Array<String> (),
+        default: []
     },
 
 }, { timestamps: true });

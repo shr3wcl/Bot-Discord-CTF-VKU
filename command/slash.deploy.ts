@@ -22,6 +22,7 @@ const serverCommands: Array<RESTPostAPIChatInputApplicationCommandsJSONBody> = [
             { name: 'Reverse Engineering', value: 'Reverse Engineering' } as APIApplicationCommandOptionChoice<string>,
             { name: 'Web Exploitation', value: 'Web Exploitation' } as APIApplicationCommandOptionChoice<string>,
         ).setDescription("Type category"))
+        .addStringOption(option => option.setName("idcontest").setDescription("Type contest ID (No if not)"))
         .addStringOption(option => option.setName("password").setDescription("Type password to verify")),
     new SlashCommandBuilder().setName("challenge").setDescription("Add new flag!")
         .addStringOption(option => option.setName('id').setDescription("Add new flag!").setRequired(true))

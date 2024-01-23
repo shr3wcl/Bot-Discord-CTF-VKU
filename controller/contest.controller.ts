@@ -3,6 +3,8 @@ import ContestModel from "../model/contest.model";
 import playerModel from "../model/player.model";
 import teamModel from "../model/team.model";
 import { createEmbed } from "../feature/component";
+import flagModel from "../model/flag.model";
+import { Flags } from "../interface/model.interface";
 
 export const createContest = async (
     idContest: String | null,
@@ -200,4 +202,39 @@ export const listContests = async (interaction: ChatInputCommandInteraction<Cach
     } catch (error) {
         await interaction.reply("Không thể lấy danh sách contest vào lúc này!");
     }
+}
+
+export const getAllChallOfContest = async (admin: Boolean, category: String | null, idContest: String, interaction: ChatInputCommandInteraction<CacheType>) => {
+    let challenges: Array<Flags>;
+    if (!category) {
+
+        if (admin) {
+            challenges = await flagModel.find({ idContest: idContest }, "idChall nameAuthor nameChall point level description mode url category idContest");
+
+        } else {
+            challenges = await flagModel.find({ mode: true, idContest: null }, "idChall nameAuthor nameChall point level description mode url category");
+        }
+    } else {
+        if (admin) {
+            challenges = await flagModel.find({ category: category, idContest: idContest }, "idChall nameAuthor nameChall point level description mode url category idContest");
+        } else {
+            challenges = await flagModel.find({ mode: true, category: category, idContest: null }, "idChall nameAuthor nameChall point level description mode url category");
+        }
+    }   
+    let infoChallenges = "";
+    challenges.map((challenge: Flags, index: number) => {
+        infoChallenges += `${index + 1}. ***Tên thử thách:*** ` + challenge.nameChall +
+            "***\n\tID:*** " + challenge.idChall +
+            "***\n\tTác giả:*** " + challenge.nameAuthor +
+            "***\n\tLoại:*** " + challenge.category +
+            "***\n\tMô tả:*** " + challenge.description +
+            "***\n\tĐiểm:*** " + challenge.point +
+            "***\n\tĐộ khó:*** " + challenge.level +
+            "***\n\tLink thử thách:*** " + challenge.url + "\n";
+        if (admin) {
+            infoChallenges += "***\n\tTrạng thái:*** " + (challenge.mode ? "Public" : "Private") + "***\tID Challenge:*** " + challenge.idChall + "\n" + "***\n\tID Contest:*** " + challenge.idContest ?? "Không" + "\n";
+        }
+    });
+    const embed = createEmbed("Danh sách thử thách" + (category ? ` thuộc loại ${category}` : ""), infoChallenges);
+    await interaction.reply({ embeds: [embed] });
 }

@@ -43,6 +43,9 @@ const FlagsSchema = new mongoose.Schema<Flags>({
     },
     category: {
         type: String,
+    },
+    idContest: {
+        type: String,
     }
 
 }, { timestamps: true });

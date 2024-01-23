@@ -23,9 +23,10 @@ const CTFCommand = {
                     await checkFlag(options.getString("flag"), user, interaction);
                     break;
                 case "challenge":
+                    const idChall = Math.random().toString(36).substring(2, 10);
                     const password = options.getString("password");
                     if (password === adminPassword) {
-                        await saveFlag(options.getString("id"),
+                        await saveFlag(idChall,
                             options.getString("author"),
                             options.getString("chall"),
                             options.getNumber("point"),
@@ -49,7 +50,7 @@ const CTFCommand = {
                     await getInfoHacker(hacker ?? user, interaction);
                     break;
                 case "listchall":
-                    await getAllChallenge(options.getString("password") == adminPassword, options.getString("category"), interaction);
+                    await getAllChallenge(options.getString("password") == adminPassword, options.getString("category"), options.getString("idcontest"), interaction);
                     break;
                 case "rmchall":
                     await deleteChallenge(options.getString("password") == adminPassword,
