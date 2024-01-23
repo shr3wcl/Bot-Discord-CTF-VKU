@@ -23,6 +23,7 @@ const serverCommands: Array<RESTPostAPIChatInputApplicationCommandsJSONBody> = [
             { name: 'Web Exploitation', value: 'Web Exploitation' } as APIApplicationCommandOptionChoice<string>,
         ).setDescription("Type category"))
         .addStringOption(option => option.setName("idcontest").setDescription("Type contest ID (No if not)"))
+        .addStringOption(option => option.setName("passwordcontest").setDescription("Type contest password (No if not)"))
         .addStringOption(option => option.setName("password").setDescription("Type password to verify")),
     new SlashCommandBuilder().setName("challenge").setDescription("Add new flag!")
         .addStringOption(option => option.setName('id').setDescription("Add new flag!").setRequired(true))
@@ -58,7 +59,13 @@ const serverCommands: Array<RESTPostAPIChatInputApplicationCommandsJSONBody> = [
         .addStringOption(option => option.setName("description").setDescription("Contest description").setRequired(true))
         .addStringOption(option => option.setName("start").setDescription("Contest start time").setRequired(true))
         .addStringOption(option => option.setName("endt").setDescription("Contest end time").setRequired(true))
-        .addBooleanOption(option => option.setName("status").setDescription("Contest status").setRequired(true)),
+        .addStringOption(option => option.setName("status").addChoices(
+            { name: "Coming", value: 'Coming' } as APIApplicationCommandOptionChoice<string>,
+            { name: 'Running', value: 'Running' } as APIApplicationCommandOptionChoice<string>,
+            { name: 'Ended', value: 'Ended' } as APIApplicationCommandOptionChoice<string>,
+        ).setDescription("Contest status").setRequired(true))
+        .addBooleanOption(option => option.setName("public").setDescription("Contest public").setRequired(true))
+        .addStringOption(option => option.setName("passwordcontest").setDescription("Contest password (Pass it if contest is public)").setRequired(true)),
     new SlashCommandBuilder().setName("listcontest").setDescription("View all contest (Normal or admin)")
         .addStringOption(option => option.setName("password").setDescription("Type password to verify")),
     new SlashCommandBuilder().setName("rmcontest").setDescription("Admin delete contest")
@@ -75,7 +82,8 @@ const serverCommands: Array<RESTPostAPIChatInputApplicationCommandsJSONBody> = [
     new SlashCommandBuilder().setName("infocontest").setDescription("View contest information!")
         .addStringOption(option => option.setName("id").setDescription("Contest ID").setRequired(true)),
     new SlashCommandBuilder().setName("joincontest").setDescription("Join contest!")
-        .addStringOption(option => option.setName("id").setDescription("Contest ID").setRequired(true)),
+        .addStringOption(option => option.setName("id").setDescription("Contest ID").setRequired(true))
+        .addStringOption(option => option.setName("password").setDescription("Contest password (Pass it if contest is public)").setRequired(true)),
     new SlashCommandBuilder().setName("leavecontest").setDescription("Leave contest!")
         .addStringOption(option => option.setName("id").setDescription("Contest ID").setRequired(true)),
     new SlashCommandBuilder().setName("help").setDescription("View help!"),
@@ -96,7 +104,8 @@ const UserCommands: Array<RESTPostAPIChatInputApplicationCommandsJSONBody> = [
     new SlashCommandBuilder().setName("createteam").setDescription("Create team!")
         .addStringOption(option => option.setName("name").setDescription("Team name").setRequired(true))
         .addStringOption(option => option.setName("description").setDescription("Team description").setRequired(true)),
-    new SlashCommandBuilder().setName("leaveteam").setDescription("Leave team!")
+    new SlashCommandBuilder().setName("leaveteam").setDescription("Leave team!"),
+    new SlashCommandBuilder().setName("contest").setDescription("View participating competitions!"),
     
 ].map(command => command.toJSON());
 

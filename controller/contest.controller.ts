@@ -78,7 +78,7 @@ export const getInfoContest = async (idContest: String | null, interaction: Chat
     }
 }
 
-export const joinContest = async (idContest: String | null, user: User, interaction: ChatInputCommandInteraction<CacheType>) => {
+export const joinContest = async (idContest: String | null, user: User, password: String | null, interaction: ChatInputCommandInteraction<CacheType>) => {
     try {
         const contest = await ContestModel.findOne({ idContest });
         if (contest) {
@@ -89,6 +89,9 @@ export const joinContest = async (idContest: String | null, user: User, interact
                 if (teamContest) {
                     await interaction.reply("Bạn đã tham gia contest này rồi!");
                 } else {
+                    if ((contest.public == false) && (password !== contest.password)) {
+                        return await interaction.reply("Mật khẩu của contest không đúng!");
+                    }
                     const newTeam = {
                         team: {
                             idTeam: idTeam,
@@ -106,6 +109,7 @@ export const joinContest = async (idContest: String | null, user: User, interact
                         }
                     });
                     await interaction.reply("Tham gia contest thành công!");
+                    
                 }
             } else {
                 await interaction.reply("Hãy gia nhập một team để đăng ký contest!");

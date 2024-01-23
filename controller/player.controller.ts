@@ -148,6 +148,24 @@ export const leaveTeam = async (hacker: User, interaction: ChatInputCommandInter
     }
 }
 
+export const listParticipatedContest = async (hacker: User, interaction: ChatInputCommandInteraction<CacheType>) => {
+    const user = await playerModel.findOne({ idUser: hacker.id });
+    if (user) {
+        const listContest = await teamModel.find({ "members.idUser": user.idUser }, "name idTeam contests");
+        if (listContest.length > 0) {
+            const listContestName = listContest.map((contest: any) => {
+                return contest.name + " - " + contest.idTeam;
+            });
+            const embed = createEmbed("Danh sách contest đã tham gia", listContestName.join("\n\t\t"));
+            await interaction.reply({ embeds: [embed] });
+        } else {
+            await interaction.reply("Bạn chưa tham gia contest nào!");
+        }
+    } else {
+        await interaction.reply("Người dùng này chưa có trong hệ thống! Submit ít nhất một Flag để được thêm vào hệ thống");
+    }
+}
+
 // export const getAllChallengeSolved = async (hacker: User, interaction: ChatInputCommandInteraction<CacheType>){
     
 // }

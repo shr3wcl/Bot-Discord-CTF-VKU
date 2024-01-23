@@ -34,7 +34,20 @@ const ContestSchema = new mongoose.Schema<Contest>({
     submit: {
         type: Array<SubmitContest>(),
         default: [],
-    }
+    },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
+    password: {
+        type: String,
+        default: null
+    },
+    public: {
+        type: Boolean,
+        default: false
+    },
 }, { timestamps: true });
 
 export default mongoose.model<Contest>("Contest", ContestSchema);

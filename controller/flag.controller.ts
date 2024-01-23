@@ -1,5 +1,5 @@
 import { CacheType, ChatInputCommandInteraction, Interaction, User } from "discord.js";
-import { Flags } from "../interface/model.interface";
+import { Contest, Flags } from "../interface/model.interface";
 import FlagModel from "../model/flag.model";
 import scoreModel from "../model/score.model";
 import playerModel from "../model/player.model";
@@ -17,10 +17,13 @@ export const saveFlag = async (
     mode: Boolean | null,
     url: String | null,
     category: String | null,
+    status: String | null,
+    publicMode: Boolean | null,
+    password: String | null,
     interaction: ChatInputCommandInteraction<CacheType>) =>
 {
     try {
-        const newFlag = new FlagModel({ idChall, nameAuthor, nameChall, point, level, description, flag, mode, url, category });
+        const newFlag = new FlagModel({ idChall, nameAuthor, nameChall, point, level, description, flag, mode, url, category, status, public: publicMode, password, createdBy: interaction.user.id });
         await newFlag.save();
         await interaction.reply("Thêm thành công!");
     } catch (error) {
@@ -55,41 +58,48 @@ export const checkFlag = async (flag: String | null, players: User, interaction:
 }
 
 
-export const getAllChallenge = async (admin: Boolean, category: String | null, idContest: String | null, interaction: ChatInputCommandInteraction<CacheType>) => {
+export const getAllChallenge = async (admin: Boolean, category: String | null, idContest: String | null, password: String | null, interaction: ChatInputCommandInteraction<CacheType>) => {
+    let contest: Contest | null = null;
+    if (idContest != null) {
+        contest = await contestModel.findOne({ idContest: idContest });
+        if (contest == null) {
+            return await interaction.reply("Không tìm thấy contest này!");
+        }
 
-    const contest = await contestModel.findOne({ idContest: idContest });
+        // Testing
+        const checkUser = contest.teams.find(team => team.team.members.find(member => member.idUser == interaction.user.id));
+        if (!checkUser) {
+            return await interaction.reply("Bạn không tham gia contest này!");
+        }
+    }
     
-    if (contest == null) {
-        await interaction.reply("Không tìm thấy contest này!");
-    } else {
-        let challenges: Array<Flags> = [];
-        challenges = await FlagModel.find({
-            mode: !admin,
-            category: category ?? { $regex: /.*/ },
-            idContest: idContest
-        }, "idChall nameAuthor nameChall point level description mode url category");
+    let challenges: Array<Flags> = [];
+    challenges = await FlagModel.find({
+        mode: !admin,
+        category: category ?? { $regex: /.*/ },
+        idContest: idContest
+    }, "idChall nameAuthor nameChall point level description mode url category");
         
-        if (challenges.length == 0) {
-            await interaction.reply(`Các challenge của contest ***${contest.nameContest}*** chưa được cập nhập hoặc public!`);
-        }
-        else {
-            let infoChallenges = "";
-            challenges.map((challenge: Flags, index: number) => {
-                infoChallenges += `${index + 1}. ***Tên thử thách:*** ` + challenge.nameChall +
-                    "***\n\tID:*** " + challenge.idChall +
-                    "***\n\tTác giả:*** " + challenge.nameAuthor +
-                    "***\n\tLoại:*** " + challenge.category +
-                    "***\n\tMô tả:*** " + challenge.description +
-                    "***\n\tĐiểm:*** " + challenge.point +
-                    "***\n\tĐộ khó:*** " + challenge.level +
-                    "***\n\tLink thử thách:*** " + challenge.url + "\n";
-                if (admin) {
-                    infoChallenges += "***\n\tTrạng thái:*** " + (challenge.mode ? "Public" : "Private") + "***\tID Challenge:*** " + challenge.idChall + "\n" + "***\n\tID Contest:*** " + challenge.idContest ?? "Không" + "\n";
-                }
-            });
-            const embed = createEmbed("Danh sách thử thách" + (category ? ` thuộc loại ${category}` : ""), infoChallenges);
-            await interaction.reply({ embeds: [embed] });
-        }
+    if (challenges.length == 0 && contest != null) {
+        await interaction.reply(`Các challenge của contest ***${contest.nameContest}*** chưa được cập nhập hoặc public!`);
+    }
+    else {
+        let infoChallenges = "";
+        challenges.map((challenge: Flags, index: number) => {
+            infoChallenges += `${index + 1}. ***Tên thử thách:*** ` + challenge.nameChall +
+                "***\n\tID:*** " + challenge.idChall +
+                "***\n\tTác giả:*** " + challenge.nameAuthor +
+                "***\n\tLoại:*** " + challenge.category +
+                "***\n\tMô tả:*** " + challenge.description +
+                "***\n\tĐiểm:*** " + challenge.point +
+                "***\n\tĐộ khó:*** " + challenge.level +
+                "***\n\tLink thử thách:*** " + challenge.url + "\n";
+            if (admin) {
+                infoChallenges += "***\n\tTrạng thái:*** " + (challenge.mode ? "Public" : "Private") + "***\tID Challenge:*** " + challenge.idChall + "\n" + "***\n\tID Contest:*** " + challenge.idContest ?? "Không" + "\n";
+            }
+        });
+        const embed = createEmbed("Danh sách thử thách" + (category ? ` thuộc loại ${category}` : ""), infoChallenges);
+        await interaction.reply({ embeds: [embed] });
     }
 }
 

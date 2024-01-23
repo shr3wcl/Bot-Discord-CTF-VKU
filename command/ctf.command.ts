@@ -1,6 +1,6 @@
 import { CacheType, Client, GuildMember, Interaction } from "discord.js"
 import { checkFlag, deleteChallenge, getAllChallenge, saveFlag, scoreBoard, updateURLChall } from "../controller/flag.controller";
-import { createTeam, getInfoHacker, leaveTeam, updateLevelAllUser } from "../controller/player.controller";
+import { createTeam, getInfoHacker, leaveTeam, listParticipatedContest, updateLevelAllUser } from "../controller/player.controller";
 import { addChallengeContest, createContest, joinContest, listContests, scoreBoardContest } from "../controller/contest.controller";
 import { joinTeam } from "../controller/player.controller";
 import { createEmbed } from "../feature/component";
@@ -36,6 +36,9 @@ const CTFCommand = {
                             options.getBoolean("public"),
                             options.getString("url"),
                             options.getString("category"),
+                            options.getString("status"),
+                            options.getBoolean("public"),
+                            options.getString("passwordcontest"),
                             interaction
                         );
                         if (options.getString("idContest")) {
@@ -50,7 +53,7 @@ const CTFCommand = {
                     await getInfoHacker(hacker ?? user, interaction);
                     break;
                 case "listchall":
-                    await getAllChallenge(options.getString("password") == adminPassword, options.getString("category"), options.getString("idcontest"), interaction);
+                    await getAllChallenge(options.getString("password") == adminPassword, options.getString("category"), options.getString("idcontest"), options.getString("passwordcontest"), interaction);
                     break;
                 case "rmchall":
                     await deleteChallenge(options.getString("password") == adminPassword,
@@ -77,7 +80,7 @@ const CTFCommand = {
                     await listContests(interaction);
                     break;
                 case "joincontest":
-                    await joinContest(options.getString("id"), user, interaction);
+                    await joinContest(options.getString("id"), user, options.getString("password"), interaction);
                     break;
                 case "scoreboardcontest":
                     await scoreBoardContest(options.getString("id"), interaction);
@@ -95,6 +98,9 @@ const CTFCommand = {
                     break;
                 case "leaveteam":
                     await leaveTeam(user, interaction);
+                    break;
+                case "contest":
+                    await listParticipatedContest(user, interaction);
                     break;
                 case "help":
                     const embed = createEmbed("Help", "```" +

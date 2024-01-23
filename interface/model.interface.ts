@@ -66,6 +66,9 @@ export interface Contest extends Document {
     endTime?: String,
     teams: TeamContest[],
     submit: SubmitContest[],
+    createdBy: mongoose.Schema.Types.ObjectId,
+    password: String,
+    public: Boolean,
 }
 
 export interface FlagContest extends mongoose.Document {
