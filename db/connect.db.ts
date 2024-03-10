@@ -9,5 +9,6 @@ export const connectDB = async () => {
     } catch (err) {
         console.log(err);
         console.log(colors.red("[!] Cannot connect to database"));
+        throw err;
     }
 }

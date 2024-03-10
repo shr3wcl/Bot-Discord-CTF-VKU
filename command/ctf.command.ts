@@ -14,20 +14,19 @@ const CTFCommand = {
 
             const { commandName, user, options } = interaction;
 
-
             switch (commandName) {
                 case "ping":
                     await interaction.reply("Pong !!!");
                     break;
                 case "flag":
-                    await checkFlag(options.getString("flag"), user, interaction);
+                    await checkFlag(options.getString("flag") , user, interaction);
                     break;
                 case "challenge":
                     const idChall = Math.random().toString(36).substring(2, 10);
                     const password = options.getString("password");
                     if (password === adminPassword) {
                         await saveFlag(idChall,
-                            options.getString("author"),
+                            options.getString("author") ?? user.username,
                             options.getString("chall"),
                             options.getNumber("point"),
                             options.getString("level"),

@@ -33,135 +33,156 @@ const setLevelHacker = (point: Number) => {
 }
 
 export const getInfoHacker = async (player: User, interaction: ChatInputCommandInteraction<CacheType>) => {
-    const user = await playerModel.findOne({ idUser: player.id });
-    if (!user) {
-        await interaction.reply("Người dùng này chưa có trong hệ thống! Submit ít nhất một Flag để được thêm vào hệ thống");
-    } else {
-        let listTeam: (string | null)[] = user.idTeam
-            ? await Promise.all(user.idTeam.map(async (currentValue: String, index: number) => {
-                const team = await teamModel.findOne({ idTeam: currentValue });
-                return team ? team.name + " - " + team.idTeam : null;
-            }))
-            : ["Chưa có team"];
-        
-        listTeam = listTeam.join("\n\t\t") as unknown as (string | null)[];
+    try {
+        const user = await playerModel.findOne({ idUser: player.id });
 
-        const infoHacker = `***Biệt danh***: ${user.nameUser}` +
-            `***\nCấp độ***: ${user.level}` +
-            `***\nSố flag đã submit***: ${user.numberFlags}` +
-            `***\nĐiểm số***: ${user.point}`
-            + `***\nTeam***: ${listTeam}`;
-        const embed = createEmbed(`Thông tin của hacker: "***${player.globalName}***"`,
-            infoHacker
-        );
+        if (!user) {
+            await interaction.reply("Người dùng này chưa có trong hệ thống! Submit ít nhất một Flag để được thêm vào hệ thống");
+            return;
+        }
+
+        const { nameUser, level, numberFlags, point, idTeam } = user;
+        const nickname = player.globalName ?? "Không rõ";
+
+        let teamInfo = "Chưa có team";
+        if (idTeam && idTeam.length > 0) {
+            const teams = await teamModel.find({ idTeam: { $in: idTeam } });
+            if (teams.length > 0) {
+                teamInfo = teams.map(team => `${team.name} - ${team.idTeam}`).join("\n\t\t");
+            }
+        }
+
+        const infoHacker = `***Biệt danh***: ${nickname}` +
+            `***\nCấp độ***: ${level}` +
+            `***\nSố flag đã submit***: ${numberFlags}` +
+            `***\nĐiểm số***: ${point}`
+            + `***\nTeam***: ${teamInfo}`;
+
+        const embed = createEmbed(`Thông tin của hacker: "***${nickname}***"`, infoHacker);
         await interaction.reply({ embeds: [embed] });
+    } catch (error) {
+        console.error(error);
+        await interaction.reply("Có lỗi xảy ra khi tải thông tin của hacker.");
     }
 }
 
+
 export const updateLevelAllUser = async (admin: Boolean, interaction: ChatInputCommandInteraction<CacheType>) => {
     if (admin) {
-        const hackers = await playerModel.find();
-        hackers.forEach(async (hacker: Players) => {
-            hacker.level = setLevelHacker(hacker.point);
-            await hacker.save();
-        })
-        await interaction.reply("Cấp độ của toàn bộ Hacker đã được cập nhập");
+        try {
+            const hackers = await playerModel.find();
+            const updateOperations = hackers.map(async (hacker: Players) => {
+                hacker.level = setLevelHacker(hacker.point);
+                await hacker.save();
+            });
+            await Promise.all(updateOperations);
+            await interaction.reply("Cấp độ của tất cả Hacker đã được cập nhật");
+        } catch (error) {
+            console.error(error);
+            await interaction.reply("Có lỗi xảy ra khi cập nhật cấp độ của tất cả Hacker.");
+        }
     } else {
         await interaction.reply("Bạn không phải là Admin để thực hiện chức năng này!");
     }
 }
 
+
 export const joinTeam = async (hacker: User, idTeam: String | null, interaction: ChatInputCommandInteraction<CacheType>) => {
     const user = await playerModel.findOne({ idUser: hacker.id });
     if (!user) {
-        await interaction.reply("Người dùng này chưa có trong hệ thống! Submit ít nhất một Flag để được thêm vào hệ thống");
+        await interaction.reply("Người dùng này chưa có trong hệ thống! Hãy submit ít nhất một Flag để được thêm vào hệ thống");
     } else {
         const team = await teamModel.findOne({ idTeam: idTeam });
 
-        if (team?.members.find((member: any) => member.idUser === user.idUser)) {
-            return await interaction.reply("Bạn đã có trong team này!");
+        if (!team) {
+            await interaction.reply("Nhóm không tồn tại!");
+            return;
         }
-        
-        if (team && team.idTeam) {
-            if(user.idTeam) {
-                user.idTeam.push(team.idTeam);
-            }
-            else {
-                user.idTeam = [team.idTeam];
-            }
-            team.members.push(user);
-            await team.save();
-            await user.save();
-            await interaction.reply("Đã tham gia team thành công!");
-        } else {
-            await interaction.reply("Team không tồn tại!");
+
+        if (team.members.find((member: any) => member.idUser === user.idUser)) {
+            await interaction.reply("Bạn đã có trong nhóm này!");
+            return;
+        }
+
+        if (!user.idTeam) {
+            user.idTeam = [];
+        }
+
+        team.idTeam ? user.idTeam.push(team.idTeam) : null;
+        team.members.push(user);
+
+        try {
+            await Promise.all([team.save(), user.save()]);
+            await interaction.reply("Đã tham gia nhóm thành công!");
+        } catch (error) {
+            console.error(error);
+            await interaction.reply("Có lỗi xảy ra khi tham gia nhóm.");
         }
     }
 }
+
 
 export const createTeam = async (hacker: User, nameTeam: String, description: String, interaction: ChatInputCommandInteraction<CacheType>) => {
     try {
         const user = await playerModel.findOne({ idUser: hacker.id });
-        if (user) {
-            const team = await teamModel.findOne({ name: nameTeam });
-            if (team) {
-                await interaction.reply("Tên team đã tồn tại!");
-            } else {
-                const idTeam = Math.random().toString(36).substring(2, 14);
-                const newTeam = new teamModel({
-                    idTeam: idTeam,
-                    name: nameTeam,
-                    description: description,
-                    score: 0,
-                    contests: [],
-                    members: [user]
-                });
-                await newTeam.save();
-                
-                if (user.idTeam) {
-                    user.idTeam.push(idTeam);
-                } else {
-                    user.idTeam = [idTeam];
-                }
-                
-                await user.save();
-                await interaction.reply("Tạo team thành công!");
-            }
-        } else {
-            await interaction.reply("Người dùng này chưa có trong hệ thống! Submit ít nhất một Flag để được thêm vào hệ thống");
+        if (!user) {
+            await interaction.reply("Người dùng này chưa có trong hệ thống! Hãy submit ít nhất một Flag để được thêm vào hệ thống");
+            return;
         }
+
+        const existingTeam = await teamModel.findOne({ name: nameTeam });
+        if (existingTeam) {
+            await interaction.reply("Tên team đã tồn tại!");
+            return;
+        }
+
+        const idTeam = Math.random().toString(36).substring(2, 14);
+        const newTeam = new teamModel({
+            idTeam: idTeam,
+            name: nameTeam,
+            description: description,
+            score: 0,
+            contests: [],
+            members: [user]
+        });
+
+        await Promise.all([newTeam.save(), user.updateOne({ $push: { idTeam: idTeam } })]);
+        await interaction.reply("Tạo team thành công!");
     } catch (error) {
-        console.log(error);
-        
+        console.error(error);
         await interaction.reply("Có lỗi xảy ra! Không thể tạo team bây giờ.");
     }
 }
 
+
 export const leaveTeam = async (hacker: User, idTeam: String | null, interaction: ChatInputCommandInteraction<CacheType>) => {
     const user = await playerModel.findOne({ idUser: hacker.id });
-    if (user) {
-        const checkTeam = await teamModel.findOne({ idTeam: idTeam });
-        if (checkTeam && user.idTeam) {
-            const index = checkTeam.members.findIndex((member: any) => member.idUser === user.idUser);
-            if (index !== -1) {
-                checkTeam.members.splice(index, 1);
-                await checkTeam.save();
-                const indexUser = user.idTeam.findIndex((team: any) => team === idTeam);
-                if (indexUser !== -1) {
-                    user.idTeam.splice(indexUser, 1);
-                    await user.save();
-                }
-                await interaction.reply("Rời team thành công!");
-            } else {
-                await interaction.reply("Bạn không có trong team này!");
-            }
-        } else {
-            await interaction.reply("Team không tồn tại!");
-        }
+    if (!user) {
+        await interaction.reply("Người dùng này chưa có trong hệ thống! Hãy submit ít nhất một Flag để được thêm vào hệ thống");
+        return;
+    }
+
+    const checkTeam = await teamModel.findOne({ idTeam: idTeam });
+    if (!checkTeam) {
+        await interaction.reply("Team không tồn tại!");
+        return;
+    }
+
+    if (!user.idTeam || !user.idTeam.includes(idTeam ?? "")) {
+        await interaction.reply("Bạn không có trong team này!");
+        return;
+    }
+
+    const index = checkTeam.members.findIndex((member: any) => member.idUser === user.idUser);
+    if (index !== -1) {
+        checkTeam.members.splice(index, 1);
+        await Promise.all([checkTeam.save(), user.updateOne({ $pull: { idTeam: idTeam } })]);
+        await interaction.reply("Rời team thành công!");
     } else {
-        await interaction.reply("Người dùng này chưa có trong hệ thống! Submit ít nhất một Flag để được thêm vào hệ thống");
+        await interaction.reply("Bạn không có trong team này!");
     }
 }
+
 
 export const listParticipatedContest = async (hacker: User, interaction: ChatInputCommandInteraction<CacheType>) => {
     const user = await playerModel.findOne({ idUser: hacker.id });
@@ -180,7 +201,3 @@ export const listParticipatedContest = async (hacker: User, interaction: ChatInp
         await interaction.reply("Người dùng này chưa có trong hệ thống! Submit ít nhất một Flag để được thêm vào hệ thống");
     }
 }
-
-// export const getAllChallengeSolved = async (hacker: User, interaction: ChatInputCommandInteraction<CacheType>){
-    
-// }

@@ -1,7 +1,7 @@
 import { Client, GatewayIntentBits, Partials } from 'discord.js';
 
-export const client = new Client({
-    intents: [GatewayIntentBits.DirectMessages,
+const intents = [
+    GatewayIntentBits.DirectMessages,
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildBans,
     GatewayIntentBits.GuildMessages,
@@ -9,6 +9,12 @@ export const client = new Client({
     GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.GuildBans,
     GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildMessageReactions],
-    partials: [Partials.Message, Partials.Channel, Partials.Reaction],
+    GatewayIntentBits.GuildMessageReactions
+];
+
+const partials = [Partials.Message, Partials.Channel, Partials.Reaction];
+
+export const client = new Client({
+    intents: intents,
+    partials: partials,
 });

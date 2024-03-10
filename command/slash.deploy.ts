@@ -119,5 +119,6 @@ export const registerSlashCommand = (guildId: string) => {
         .catch(error => {
             console.log(colors.yellow("[!] There was a problem trying to register the command"));
             console.log(error);
+            throw new Error("Error when register command");
         });
 }
